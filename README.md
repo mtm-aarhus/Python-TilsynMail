@@ -1,3 +1,53 @@
+# TilsynsApp Daily Inspection Summary
+
+OpenOrchestrator robot that, once per day, emails a summary of all inspections registered through the TilsynsApp that day.
+
+## What it does
+
+1. Queries the `TilsynItems` container in Cosmos for documents with `last_inspected_at` matching today's date.
+2. Flattens each document's `inspections` history into one row per real inspection performed today (hide/restore entries are filtered out).
+3. Builds an HTML table with a direct link to each case's origin system:
+   - **Permission** → `https://vejman.vd.dk/permissions/update.jsp?caseid={case_id}`
+   - **Henstilling** → `https://pez.giantleap.net/cases/view/{PEZUUID}/case`
+   - **Indmeldt** → `https://vejmankassen.adm.aarhuskommune.dk/tilsyn`
+4. Sends the table to the recipient stored in the `VejArealMail` OpenOrchestrator constant. Subject: **"Dagens inspektioner"**.
+
+If no inspections were registered today, no mail is sent and the robot exits quietly.
+
+## Columns in the email
+
+| Column | Source |
+|---|---|
+| Tid | `inspected_at` from the inspection record (formatted `HH:MM`) |
+| Tilsynsførende | Initial portion of `inspector_email` |
+| Sagsnummer | `case_number` (or `HenstillingId` for henstillinger), linked |
+| Adresse | `full_address` |
+| Information | `rovm_equipment_type` / `Forseelse` / `title` depending on type |
+| Status | `selection` (permission), mapped `faktura_status` (henstilling), or "Tilset" (indmeldt). For henstillinger, any `kvadratmeter` / `end_date` change is shown as a sub-line. |
+| Kommentar | Free-text comment from the inspector |
+
+## OpenOrchestrator setup
+
+### Constants
+- `VejArealMail` — recipient address for the daily mail.
+
+### Credentials
+- `AAKTilsynDB` — Cosmos DB: `username` = endpoint URL, `password` = key.
+
+### Trigger
+Schedule as a single daily trigger (e.g. 16:00) — uses the **linear flow**.
+
+## Dependencies
+
+```toml
+dependencies = [
+    "OpenOrchestrator == 2.*",
+    "azure-cosmos == 4.15.0",
+]
+```
+
+SMTP host/port are read from `robot_framework/config.py` (`SMTP_SERVER`, `SMTP_PORT`) — same pattern as the existing RegelRytteren robot.
+
 # Robot-Framework V4
 
 This repo is meant to be used as a template for robots made for [OpenOrchestrator](https://github.com/itk-dev-rpa/OpenOrchestrator) v2.
