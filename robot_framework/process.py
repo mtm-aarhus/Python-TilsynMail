@@ -38,10 +38,10 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
         enable_cross_partition_query=True,
     ))
 
-    orchestrator_connection.log_info(f"Inspektioner i dag: {len(items)}")
+    orchestrator_connection.log_info(f"Tilsyn i dag: {len(items)}")
 
     if not items:
-        orchestrator_connection.log_info("Ingen inspektioner i dag — springer mail over.")
+        orchestrator_connection.log_info("Ingen tilsyn i dag — springer mail over.")
         return
 
     # Flatten: one row per inspection entry that happened today
@@ -93,8 +93,8 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
     html = f"""
     <html>
       <body style="font-family:sans-serif">
-        <h1>Dagens inspektioner</h1>
-        <p>{len(rows_data)} inspektion(er) foretaget i dag fordelt på {len(items)} sag(er).</p>
+        <h1>Dagens tilsyn</h1>
+        <p>{len(rows_data)} tilsyn foretaget i dag fordelt på {len(items)} sag(er).</p>
         <table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse">
           <thead>
             <tr>
@@ -116,7 +116,7 @@ def process(orchestrator_connection: OrchestratorConnection, queue_element: Queu
     """
     jadt = orchestrator_connection.get_constant("jadt").value
 
-    send_email(to_address=recipient, subject="Dagens inspektioner", body=html, bcc=jadt)
+    send_email(to_address=recipient, subject="Dagens tilsyn", body=html, bcc=jadt)
     orchestrator_connection.log_info("Mail sendt.")
 
 
